@@ -1,4 +1,3 @@
--- Rodri Fly + Noclip GUI (Completo)
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -10,7 +9,6 @@ local speed = 5
 
 local control = {F = 0, B = 0, L = 0, R = 0, U = 0, D = 0}
 
--- Reset
 local function resetFly()
     flying = false
     if humanoidRootPart:FindFirstChild("BodyGyro") then
@@ -95,7 +93,7 @@ local flyFrame = Instance.new("Frame", frame)
 flyFrame.Size = UDim2.new(1, 0, 0, 120)
 flyFrame.Position = UDim2.new(0, 0, 0, 60)
 flyFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-flyFrame.Visible = false
+flyFrame.Visible = true
 flyFrame.ZIndex = 2
 Instance.new("UICorner", flyFrame).CornerRadius = UDim.new(0, 12)
 
@@ -148,7 +146,7 @@ noclipButton.ZIndex = 2
 Instance.new("UICorner", noclipButton).CornerRadius = UDim.new(0, 8)
 forceWhiteText(noclipButton)
 
--- Funções Fly e Noclip
+-- Função Fly Toggle
 flyButton.MouseButton1Click:Connect(function()
     if flying then
         resetFly()
@@ -171,16 +169,16 @@ flyButton.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Função Noclip Toggle
 noclipButton.MouseButton1Click:Connect(function()
+    noclip = not noclip
     if noclip then
+        noclipButton.Text = "Noclip: ON"
+        noclipButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+    else
         resetNoclip()
         noclipButton.Text = "Toggle Noclip"
         noclipButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    else
-        resetNoclip()
-        noclip = true
-        noclipButton.Text = "Noclip: ON"
-        noclipButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
     end
 end)
 
@@ -219,27 +217,34 @@ UserInputService.InputEnded:Connect(function(input, gpe)
 end)
 
 RunService.RenderStepped:Connect(function()
+    -- Fly
+    if flying then
+        local cam = workspace.CurrentCamera
+        local moveVec = Vector3.zero
+
+        local forward = cam.CFrame.LookVector
+        local right = cam.CFrame.RightVector
+        local up = Vector3.new(0, 1, 0)
+
+        moveVec = moveVec 
+            + forward * (control.F - control.B)
+            + right * (control.R - control.L)
+            + up * (control.U - control.D)
+
+        if moveVec.Magnitude > 0 then
+            moveVec = moveVec.Unit * speed
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + moveVec
+        end
+    end
+end)
+
+-- Noclip Infinito Real
+RunService.Stepped:Connect(function()
     if noclip then
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") then
                 v.CanCollide = false
             end
-        end
-    end
-
-    if flying then
-        local cam = workspace.CurrentCamera
-        local moveVec = Vector3.zero
-
-        local forward = cam.CFrame.LookVector * (control.F - control.B)
-        local right = cam.CFrame.RightVector * (control.R - control.L)
-        local up = Vector3.new(0, 1, 0) * (control.U - control.D)
-
-        moveVec = forward + right + up
-
-        if moveVec.Magnitude > 0 then
-            moveVec = moveVec.Unit * speed
-            humanoidRootPart.CFrame = humanoidRootPart.CFrame + moveVec
         end
     end
 end)
