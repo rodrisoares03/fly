@@ -1,3 +1,4 @@
+-- Rodri Fly + Noclip GUI (Completo)
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -9,7 +10,7 @@ local speed = 5
 
 local control = {F = 0, B = 0, L = 0, R = 0, U = 0, D = 0}
 
--- Reset sempre que ativar função
+-- Reset
 local function resetFly()
     flying = false
     if humanoidRootPart:FindFirstChild("BodyGyro") then
@@ -22,7 +23,6 @@ end
 
 local function resetNoclip()
     noclip = false
-    -- Reativa colisão para todas partes do personagem
     for _, v in pairs(character:GetDescendants()) do
         if v:IsA("BasePart") then
             v.CanCollide = true
@@ -42,7 +42,6 @@ local function forceWhiteText(instance)
     end)
 end
 
--- Frame Principal
 local frame = Instance.new("Frame", screenGui)
 frame.Size = UDim2.new(0, 250, 0, 180)
 frame.Position = UDim2.new(0, 50, 0, 50)
@@ -60,7 +59,6 @@ shadow.ImageTransparency = 0.5
 shadow.BackgroundTransparency = 1
 shadow.ZIndex = 0
 
--- Label
 local label = Instance.new("TextLabel", frame)
 label.Size = UDim2.new(1, 0, 0, 30)
 label.Text = "☁️ Rodri Menu"
@@ -71,7 +69,6 @@ label.ZIndex = 2
 Instance.new("UICorner", label).CornerRadius = UDim.new(0, 12)
 forceWhiteText(label)
 
--- Aba Fly
 local flyTabButton = Instance.new("TextButton", frame)
 flyTabButton.Size = UDim2.new(0.5, 0, 0, 30)
 flyTabButton.Position = UDim2.new(0, 0, 0, 30)
@@ -83,7 +80,6 @@ flyTabButton.ZIndex = 2
 Instance.new("UICorner", flyTabButton).CornerRadius = UDim.new(0, 8)
 forceWhiteText(flyTabButton)
 
--- Aba Noclip
 local noclipTabButton = Instance.new("TextButton", frame)
 noclipTabButton.Size = UDim2.new(0.5, 0, 0, 30)
 noclipTabButton.Position = UDim2.new(0.5, 0, 0, 30)
@@ -95,7 +91,6 @@ noclipTabButton.ZIndex = 2
 Instance.new("UICorner", noclipTabButton).CornerRadius = UDim.new(0, 8)
 forceWhiteText(noclipTabButton)
 
--- Fly Frame
 local flyFrame = Instance.new("Frame", frame)
 flyFrame.Size = UDim2.new(1, 0, 0, 120)
 flyFrame.Position = UDim2.new(0, 0, 0, 60)
@@ -121,10 +116,8 @@ local function updateSpeed()
         speed = inputSpeed
     end
 end
-
 speedBox.FocusLost:Connect(updateSpeed)
 
--- Fly Button
 local flyButton = Instance.new("TextButton", flyFrame)
 flyButton.Size = UDim2.new(0.8, 0, 0, 40)
 flyButton.Position = UDim2.new(0.1, 0, 0, 70)
@@ -136,7 +129,6 @@ flyButton.ZIndex = 2
 Instance.new("UICorner", flyButton).CornerRadius = UDim.new(0, 8)
 forceWhiteText(flyButton)
 
--- Noclip Frame
 local noclipFrame = Instance.new("Frame", frame)
 noclipFrame.Size = UDim2.new(1, 0, 0, 120)
 noclipFrame.Position = UDim2.new(0, 0, 0, 60)
@@ -156,7 +148,7 @@ noclipButton.ZIndex = 2
 Instance.new("UICorner", noclipButton).CornerRadius = UDim.new(0, 8)
 forceWhiteText(noclipButton)
 
--- Função Fly Toggle
+-- Funções Fly e Noclip
 flyButton.MouseButton1Click:Connect(function()
     if flying then
         resetFly()
@@ -179,7 +171,6 @@ flyButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Função Noclip Toggle
 noclipButton.MouseButton1Click:Connect(function()
     if noclip then
         resetNoclip()
@@ -193,7 +184,6 @@ noclipButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Troca abas
 flyTabButton.MouseButton1Click:Connect(function()
     flyFrame.Visible = true
     noclipFrame.Visible = false
@@ -229,7 +219,6 @@ UserInputService.InputEnded:Connect(function(input, gpe)
 end)
 
 RunService.RenderStepped:Connect(function()
-    -- Noclip
     if noclip then
         for _, v in pairs(character:GetDescendants()) do
             if v:IsA("BasePart") then
@@ -238,27 +227,19 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Fly
     if flying then
         local cam = workspace.CurrentCamera
         local moveVec = Vector3.zero
 
-        local forward = cam.CFrame.LookVector
-        local right = cam.CFrame.RightVector
-        local up = Vector3.new(0, 1, 0)
+        local forward = cam.CFrame.LookVector * (control.F - control.B)
+        local right = cam.CFrame.RightVector * (control.R - control.L)
+        local up = Vector3.new(0, 1, 0) * (control.U - control.D)
 
-        moveVec = moveVec 
-            + forward * (control.F - control.B)
-            + right * (control.R - control.L)
-            + up * (control.U - control.D)
+        moveVec = forward + right + up
 
         if moveVec.Magnitude > 0 then
             moveVec = moveVec.Unit * speed
-            -- Move com colisão
-            local ray = workspace:Raycast(humanoidRootPart.Position, moveVec * 0.5, RaycastParams.new())
-            if not ray then
-                humanoidRootPart.CFrame = humanoidRootPart.CFrame + moveVec
-            end
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + moveVec
         end
     end
 end)
